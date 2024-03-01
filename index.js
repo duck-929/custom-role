@@ -1,12 +1,10 @@
-// index.js
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const config = require('./config.json');  
 
 const app = express();
-const port = 3000;
 
 const client = new Client({
   intents: [
@@ -20,15 +18,12 @@ const client = new Client({
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Multer 설정
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Serve static files from the 'public' directory
 app.use(express.static('public'));
 
-// 신청한 폼 내용을 출력할 Discord 채널 ID
-const targetChannelId = '1191367418774311023'; // 실제로 사용할 채널 ID로 변경하세요
+const targetChannelId = config.channel_id;
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
@@ -43,7 +38,6 @@ app.post('/createRole', upload.single('roleImage'), async (req, res) => {
       return res.status(404).json({ error: '서버를 찾을 수 없습니다.' });
     }
 
-    // Discord 채널로 임베드 메시지 출력
     const targetChannel = guild.channels.cache.get(targetChannelId);
     if (targetChannel) {
       const embed = new EmbedBuilder()
@@ -60,7 +54,6 @@ app.post('/createRole', upload.single('roleImage'), async (req, res) => {
         embed.setImage(`attachment://roleImage.png`);
       }
 
-      // 메시지 전송
       targetChannel.send({ content: "<@&1061172968258019328>", embeds: [embed], files: req.file ? [{ attachment: req.file.buffer, name: 'roleImage.png' }] : [] });
     }
 
@@ -75,8 +68,8 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.login('MTIxMTMzNDAxOTkyNTY3NjAzMg.G-t_hJ.Z0y-dOmk-BHcFqNqbZl-t1uB4CTPo557wqMgjE');
+client.login(config.token);  
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+app.listen(config.port, () => {  
+  console.log(`Server is running at http://localhost:${config.port}`);
 });
